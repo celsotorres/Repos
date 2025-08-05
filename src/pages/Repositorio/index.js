@@ -1,24 +1,23 @@
 import React, {useState, useEffect}from "react";
-import { Container, Owner, Loading, BackButton, IssuesList } from "./styles";
+import { Container, Owner, Loading, BackButton, IssuesList, PageActions, Filterlist } from "./styles";
 import { parsePath, useParams } from "react-router-dom";
 import {FaArrowLeft} from 'react-icons/fa';
 import api from '../../services/api'
 
-/*export default function Repositorio() {
-  const { repositorio } = useParams();
-
-  return (
-    <h1 style={{ color: '#FFF' }}>
-      Repositorio Page: {decodeURIComponent(repositorio)}
-    </h1>
-  );
-}*/
 
 export default function Repositorio() {
   const { repositorio } = useParams();
   const [repo, setRepo] = useState({});
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState([
+    { state: 'all', label: 'Todas', active: false },
+    { state: 'open', label: 'Abertas', active: true },
+    { state: 'closed', label: 'Fechadas', active: false },
+  ]);
+
+ const [filterIndex, setFilterIndex] = useState(0);
 
   useEffect(()=>{
     async function load() {
@@ -26,7 +25,11 @@ export default function Repositorio() {
 
       const [repoData, issuesData] = await Promise.all([
         api.get(`/repos/${nomeRepo}`),
-        api.get(`/repos/${nomeRepo}/issues`, { params: { state: 'open', per_page: 5 } }),
+        api.get(`/repos/${nomeRepo}/issues`, 
+          { params: { 
+            state: filters.find(f => f.active).state, 
+            per_page: 5 
+          } }),
       ]);
       setRepo(repoData.data);
       setIssues(issuesData.data); 
@@ -35,6 +38,35 @@ export default function Repositorio() {
     }
     load();
   },[ repositorio ]);
+
+  //Cria a paginação
+  useEffect(() => {
+    async function loadIssues() {
+      const nomeRepo = decodeURIComponent(repositorio);
+      const response = await api.get(`/repos/${nomeRepo}/issues`, {
+        params: { state: filters[filterIndex].state, per_page: 5, page }
+      });
+      setIssues(response.data);
+    }
+    if (!loading) {
+      loadIssues();
+    }
+  }, [filterIndex, page, repositorio, loading]);
+
+  //Função que controla a paginação
+  function handlePage(action) {
+    setPage(action === 'next' ? page + 1 : page - 1);
+  }
+
+  //Função que controla os filtros
+  function handleFilter(index) {  
+    setFilterIndex(index);
+    setFilters(filters.map((filter, i) => ({
+      ...filter,
+      active: i === index
+    })));
+    setPage(1); // Reseta a página ao mudar o filtro
+  }
 
   return (
     <Container>
@@ -48,6 +80,26 @@ export default function Repositorio() {
           <p>{repo.description}</p>
         </div>
       </Owner>
+
+      <Filterlist active={filterIndex}>
+        <div className="buttons">
+          {filters.map((filter, index) => (
+            <button
+              key={filter.state}
+              type="button"
+              onClick={() => handleFilter(index)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+  <div className="text">
+    <h1>Issues</h1>
+    <p>Mostrando {issues.length} issues abertas</p>
+  </div>
+</Filterlist>
+       
       <IssuesList>
         {issues.map(issue => (
           <li key={issue.id}>
@@ -67,6 +119,23 @@ export default function Repositorio() {
           </li>
         ))}
       </IssuesList>
+      <PageActions>
+        <button
+          type="button"
+          onClick={() => handlePage('back')}
+          disabled={page === 1}
+        >
+          Voltar
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handlePage('next')}
+        >
+          Próxima
+        </button>
+      </PageActions>
+
     </Container>
   );
 }

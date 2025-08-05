@@ -129,3 +129,75 @@ export const IssuesList = styled.ul`
     }
   }
   `;
+
+  export const PageActions = styled.div`
+  display: flex;  
+  align-items: center;
+  justify-content: space-between;
+
+ button {
+  background: #0d2636;
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:disabled {
+    background: #ccc; 
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:not(:disabled):hover {
+    background: #0056b3;
+  }
+}`;
+
+export const Filterlist = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 20px 0;
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .buttons button {
+    outline: 0;
+    border: 0;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 0 5px;
+    background: #0d2636;
+    color: white;
+    cursor: pointer;
+
+    &:nth-child(${props => props.active + 1}) {
+      background: #0071db;
+    }
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .text h1 {
+    margin: 0 0 5px;
+    font-size: 24px;
+    color: #0d2636;
+  }
+
+  .text p {
+    font-size: 14px;
+    color: #aaa;
+  }
+
+`;
